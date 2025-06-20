@@ -280,7 +280,7 @@ export type Product = {
     [internalGroqTypeReferenceTo]?: "brand";
   };
   status?: "new" | "hot" | "sale";
-  variant?: "gadget" | "appliances" | "refrigerators" | "others";
+  variant?: "handbags" | "jewelry" | "watches" | "sunglasses" | "wallets" | "scarves" | "belts";
   isFeatured?: boolean;
 };
 
@@ -547,7 +547,7 @@ export type DEAL_PRODUCTSResult = Array<{
     [internalGroqTypeReferenceTo]?: "brand";
   };
   status?: "hot" | "new" | "sale";
-  variant?: "appliances" | "gadget" | "others" | "refrigerators";
+  variant?: "belts" | "handbags" | "jewelry" | "scarves" | "sunglasses" | "wallets" | "watches";
   isFeatured?: boolean;
 }>;
 // Variable: PRODUCT_BY_SLUG_QUERY
@@ -590,7 +590,7 @@ export type PRODUCT_BY_SLUG_QUERYResult = {
     [internalGroqTypeReferenceTo]?: "brand";
   };
   status?: "hot" | "new" | "sale";
-  variant?: "appliances" | "gadget" | "others" | "refrigerators";
+  variant?: "belts" | "handbags" | "jewelry" | "scarves" | "sunglasses" | "wallets" | "watches";
   isFeatured?: boolean;
 } | null;
 // Variable: BRAND_QUERY
@@ -657,7 +657,7 @@ export type MY_ORDERS_QUERYResult = Array<{
         [internalGroqTypeReferenceTo]?: "brand";
       };
       status?: "hot" | "new" | "sale";
-      variant?: "appliances" | "gadget" | "others" | "refrigerators";
+      variant?: "belts" | "handbags" | "jewelry" | "scarves" | "sunglasses" | "wallets" | "watches";
       isFeatured?: boolean;
     } | null;
     quantity?: number;

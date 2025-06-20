@@ -11,7 +11,7 @@ export const productType = [
   { title: "Sunglasses", value: "sunglasses" },
   { title: "Wallets", value: "wallets" },
   { title: "Scarves", value: "scarves" },
-  { title: "Belts", value: "belts" },
+  { title: "Belts", value: "belts" },  
 ];
 
 export const quickLinksData = [

@@ -15,9 +15,7 @@ const Home = async () => {
     <Container className="bg-shop-light-pink">
       <HomeBanner />
       <ProductGrid />
-      <HomeCategories categories={categories} />
       <ShopByBrands />
-      <LatestBlog />
     </Container>
   );
 };

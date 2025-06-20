@@ -1724,19 +1724,31 @@
           "of": [
             {
               "type": "string",
-              "value": "gadget"
+              "value": "handbags"
             },
             {
               "type": "string",
-              "value": "appliances"
+              "value": "jewelry"
             },
             {
               "type": "string",
-              "value": "refrigerators"
+              "value": "watches"
             },
             {
               "type": "string",
-              "value": "others"
+              "value": "sunglasses"
+            },
+            {
+              "type": "string",
+              "value": "wallets"
+            },
+            {
+              "type": "string",
+              "value": "scarves"
+            },
+            {
+              "type": "string",
+              "value": "belts"
             }
           ]
         },
