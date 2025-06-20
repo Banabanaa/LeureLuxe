@@ -18,8 +18,7 @@ const Footer = () => {
           <div className="space-y-4">
             <Logo />
             <SubText>
-              Discover curated furniture collections at Leure Luxe, blending
-              style and comfort to elevate your living spaces.
+              Leure Luxe is a curated accessories destination that offers a wide selection of premium, preloved, and on-sale pieces.
             </SubText>
             <SocialMedia
               className="text-darkColor/60"

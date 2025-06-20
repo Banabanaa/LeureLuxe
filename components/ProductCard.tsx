@@ -3,7 +3,6 @@ import { urlFor } from "@/sanity/lib/image";
 import Image from "next/image";
 import React from "react";
 import Link from "next/link";
-import { StarIcon } from "@sanity/icons";
 import { Flame } from "lucide-react";
 import PriceView from "./PriceView";
 import Title from "./Title";
@@ -13,23 +12,38 @@ import AddToCartButton from "./AddToCartButton";
 const ProductCard = ({ product }: { product: Product }) => {
   return (
     <div className="text-sm border-[1px] rounded-md border-darkBlue/20 group bg-white">
-      <div className="relative group overflow-hidden bg-shop_light_bg">
+      <div className="relative group overflow-hidden bg-shop_light_bg h-64">
         {product?.images && (
-          <Link href={`/product/${product?.slug?.current}`}>
+          <Link
+            href={`/product/${product?.slug?.current}`}
+            className="block relative w-full h-full"
+          >
+            {/* First image (default) */}
             <Image
               src={urlFor(product.images[0]).url()}
               alt="productImage"
-              width={500}
-              height={500}
+              fill
               priority
-              className={`w-full h-64 object-contain overflow-hidden transition-transform bg-shop_light_bg duration-500 
-              ${product?.stock !== 0 ? "group-hover:scale-105" : "opacity-50"}`}
+              className="object-cover transition-opacity duration-500 group-hover:opacity-0"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
+
+            {/* Second image (hover), if available */}
+            {product.images[1] && (
+              <Image
+                src={urlFor(product.images[1]).url()}
+                alt="productImageHover"
+                fill
+                priority
+                className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            )}
           </Link>
         )}
         <ProductSideMenu product={product} />
         {product?.status === "sale" ? (
-          <p className="absolute top-2 left-2 z-10 text-xs border border-darkColor/50 px-2 rounded-full group-hover:border-lightGreen hover:text-shop_dark_green hoverEffect">
+          <p className="absolute top-2 left-2 z-10 text-xs border border-orange-500 bg-orange-100 px-3 rounded-full text-orange-700 group-hover:border-orange-600 hover:text-orange-800 hoverEffect">
             Sale!
           </p>
         ) : (
@@ -45,6 +59,7 @@ const ProductCard = ({ product }: { product: Product }) => {
           </Link>
         )}
       </div>
+
       <div className="p-3 flex flex-col gap-2">
         {product?.categories && (
           <p className="uppercase line-clamp-1 text-xs font-medium text-lightText">
@@ -52,7 +67,8 @@ const ProductCard = ({ product }: { product: Product }) => {
           </p>
         )}
         <Title className="text-sm line-clamp-1">{product?.name}</Title>
-        <div className="flex items-center gap-2">
+
+        {/* <div className="flex items-center gap-2">
           <div className="flex items-center">
             {[...Array(5)].map((_, index) => (
               <StarIcon
@@ -65,12 +81,16 @@ const ProductCard = ({ product }: { product: Product }) => {
             ))}
           </div>
           <p className="text-lightText text-xs tracking-wide">5 Reviews</p>
-        </div>
+        </div> */}
 
         <div className="flex items-center gap-2.5">
           <p className="font-medium">In Stock</p>
           <p
-            className={`${product?.stock === 0 ? "text-red-600" : "text-shop_dark_green/80 font-semibold"}`}
+            className={`${
+              product?.stock === 0
+                ? "text-red-600"
+                : "text-shop_dark_green/80 font-semibold"
+            }`}
           >
             {(product?.stock as number) > 0 ? product?.stock : "unavailable"}
           </p>

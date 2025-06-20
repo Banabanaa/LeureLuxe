@@ -67,19 +67,22 @@ const useStore = create<StoreState>()(
         })),
       resetCart: () => set({ items: [] }),
       getTotalPrice: () => {
-        return get().items.reduce(
-          (total, item) => total + (item.product.price ?? 0) * item.quantity,
-          0
-        );
-      },
-      getSubTotalPrice: () => {
         return get().items.reduce((total, item) => {
           const price = item.product.price ?? 0;
           const discount = ((item.product.discount ?? 0) * price) / 100;
-          const discountedPrice = price + discount;
+          const discountedPrice = price - discount; // ✅ apply discount properly
           return total + discountedPrice * item.quantity;
         }, 0);
       },
+
+      getSubTotalPrice: () => {
+        return get().items.reduce((total, item) => {
+          const price = item.product.price ?? 0;
+          return total + price * item.quantity; // Use original price only
+        }, 0);
+      },
+
+
       getItemCount: (productId) => {
         const item = get().items.find((item) => item.product._id === productId);
         return item ? item.quantity : 0;
@@ -94,8 +97,8 @@ const useStore = create<StoreState>()(
             return {
               favoriteProduct: isFavorite
                 ? state.favoriteProduct.filter(
-                    (item) => item._id !== product._id
-                  )
+                  (item) => item._id !== product._id
+                )
                 : [...state.favoriteProduct, { ...product }],
             };
           });
