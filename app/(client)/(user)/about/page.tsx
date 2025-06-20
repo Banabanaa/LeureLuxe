@@ -12,7 +12,7 @@ const AboutPage = () => {
         From designer handbags to statement jewelry and fashion must-haves, each item at Leure Luxe is carefully selected to ensure quality, authenticity, and value. Our preloved collection gives iconic items a second life—making luxury more sustainable and accessible.
       </p>
       <p>
-        Whether you're looking for a treasured vintage find or the latest trending accessory, Leure Luxe is your go-to source. We believe that style should be expressive, elevated, and within reach—without compromising on quality or conscience.
+        Whether you&apos;re looking for a treasured vintage find or the latest trending accessory, Leure Luxe is your go-to source. We believe that style should be expressive, elevated, and within reach—without compromising on quality or conscience.
       </p>
     </Container>
   );

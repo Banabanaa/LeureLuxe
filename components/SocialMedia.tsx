@@ -1,4 +1,4 @@
-import { Facebook, Github, Linkedin, Slack, Youtube } from "lucide-react";
+import { Facebook, Github } from "lucide-react";
 import React from "react";
 import {
   Tooltip,
