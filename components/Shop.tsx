@@ -1,7 +1,7 @@
 "use client";
 
 import { BRANDS_QUERYResult, Category, Product } from "@/sanity.types";
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import Container from "./Container";
 import Title from "./Title";
 import CategoryList from "./shop/CategoryList";
@@ -19,7 +19,7 @@ interface Props {
   brands: BRANDS_QUERYResult;
 }
 
-const Shop = ({ categories, brands }: Props) => {
+const ShopContent = ({ categories, brands }: Props) => {
   const searchParams = useSearchParams();
   const brandParams = searchParams?.get("brand");
   const categoryParams = searchParams?.get("category");
@@ -160,6 +160,18 @@ const Shop = ({ categories, brands }: Props) => {
         </div>
       </Container>
     </div>
+  );
+};
+
+const Shop = (props: Props) => {
+  return (
+    <Suspense fallback={
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="w-10 h-10 text-shop_dark_green animate-spin" />
+      </div>
+    }>
+      <ShopContent {...props} />
+    </Suspense>
   );
 };
 
