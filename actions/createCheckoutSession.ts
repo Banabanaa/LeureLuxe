@@ -22,18 +22,7 @@ export interface GroupedCartItems {
 }
 
 // Environment-aware URL generator
-const getBaseUrl = () => {
-  // Use Vercel's environment variable if available
-  if (process.env.VERCEL_URL) {
-    return `https://${process.env.VERCEL_URL}`;
-  }
-  // Fallback for production
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://leureluxe-e-commerce.vercel.app';
-  }
-  // Default to localhost for development
-  return 'http://localhost:3000';
-};
+const getBaseUrl = () => 'https://leureluxe-e-commerce.vercel.app';
 
 export async function createCheckoutSession(
   items: GroupedCartItems[],
@@ -84,8 +73,8 @@ export async function createCheckoutSession(
       invoice_creation: {
         enabled: true,
       },
-      success_url: `${getBaseUrl()}/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`,
-      cancel_url: `${getBaseUrl()}/cart`,
+      success_url: `https://leureluxe-e-commerce.vercel.app/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`,
+      cancel_url: `https://leureluxe-e-commerce.vercel.app/cart`,
       line_items,
     };
 
