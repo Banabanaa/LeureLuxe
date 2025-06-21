@@ -1,8 +1,8 @@
-# 👜 Leure Luxe - Leure Luxe is a curated accessories shop that offers a wide selection of premium, preloved, and on-sale pieces from selected brands.
+# 👜 Leure Luxe
 
-**Leure Luxe** From designer handbags to statement jewelry and fashion must-haves, each item at Leure Luxe is carefully selected to ensure quality, authenticity, and value. Our preloved collection gives iconic items a second life—making luxury more sustainable and accessible.
+**Leure Luxe** from designer handbags to statement jewelry and fashion must-haves, each item at Leure Luxe is carefully selected to ensure quality, authenticity, and value. We are a curated accessories shop that offers a wide selection of premium, preloved, and on-sale pieces from selected brands. Our preloved collection gives iconic items a second life—making luxury more sustainable and accessible.
 
-**Leure Luxe** is a curated online accessories boutique offering a premium selection of:
+**Leure Luxe** offers a premium selection of:
 
 - Belts  
 - Handbags  
