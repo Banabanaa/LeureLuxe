@@ -6,5 +6,5 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: true, // Set to false if statically generating pages, using ISR or tag-based revalidation
+  useCdn: process.env.NEXT_PUBLIC_SANITY_USE_CDN === 'true', // Set via env: 'true' for CDN, 'false' for SSR/ISR
 })
