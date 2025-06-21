@@ -3,7 +3,7 @@ import { defineArrayMember, defineField, defineType } from "sanity";
 
 export const orderType = defineType({
   name: "order",
-  title: "Order",
+  title: "Orders",
   type: "document",
   icon: BasketIcon,
   fields: [
@@ -119,11 +119,12 @@ export const orderType = defineType({
       title: "Shipping Address",
       type: "object",
       fields: [
-        defineField({ name: "state", title: "State", type: "string" }),
-        defineField({ name: "zip", title: "Zip Code", type: "string" }),
-        defineField({ name: "city", title: "City", type: "string" }),
-        defineField({ name: "address", title: "Address", type: "string" }),
         defineField({ name: "name", title: "Name", type: "string" }),
+        defineField({ name: "address", title: "Address", type: "string" }),
+        defineField({ name: "barangay", title: "Barangay", type: "string" }),
+        defineField({ name: "city", title: "City", type: "string" }),
+        defineField({ name: "zip", title: "Zip Code", type: "string" }),
+        defineField({ name: "province", title: "Province", type: "string" }), 
       ],
     }),
     defineField({
