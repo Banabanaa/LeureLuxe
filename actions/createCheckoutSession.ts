@@ -21,6 +21,20 @@ export interface GroupedCartItems {
   quantity: number;
 }
 
+// Environment-aware URL generator
+const getBaseUrl = () => {
+  // Use Vercel's environment variable if available
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  // Fallback for production
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://leureluxe-e-commerce.vercel.app';
+  }
+  // Default to localhost for development
+  return 'http://localhost:3000';
+};
+
 export async function createCheckoutSession(
   items: GroupedCartItems[],
   metadata: Metadata
@@ -35,16 +49,15 @@ export async function createCheckoutSession(
     // Calculate the discount amount
     const discountAmount = metadata.subtotalAmount - metadata.totalAmount;
 
-    // Create line items with discounted prices directly
+    // Create line items
     const line_items = items.map((item) => {
-      // Calculate discounted price per item based on the overall discount ratio
       const discountRatio = discountAmount / metadata.subtotalAmount;
       const itemPrice = (item.product.price ?? 0) * (1 - discountRatio);
       
       return {
         price_data: {
           currency: "PHP",
-          unit_amount: Math.round(itemPrice * 100), // Apply discount here
+          unit_amount: Math.round(itemPrice * 100),
           product_data: {
             name: item?.product?.name || "Unknown Product",
             description: item?.product?.description,
@@ -71,10 +84,8 @@ export async function createCheckoutSession(
       invoice_creation: {
         enabled: true,
       },
-      success_url: `${
-        process.env.NEXT_PUBLIC_BASE_URL
-      }/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/cart`,
+      success_url: `${getBaseUrl()}/success?session_id={CHECKOUT_SESSION_ID}&orderNumber=${metadata.orderNumber}`,
+      cancel_url: `${getBaseUrl()}/cart`,
       line_items,
     };
 
@@ -84,7 +95,6 @@ export async function createCheckoutSession(
       sessionPayload.customer_email = metadata.customerEmail;
     }
 
-    
     const session = await stripe.checkout.sessions.create(sessionPayload);
     return session.url;
   } catch (error) {
