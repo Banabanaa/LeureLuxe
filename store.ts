@@ -1,6 +1,6 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { Product } from "./sanity.types";
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { Product } from '@/sanity.types';
 
 export interface CartItem {
   product: Product;
@@ -8,116 +8,197 @@ export interface CartItem {
 }
 
 interface StoreState {
-  items: CartItem[];
-  addItem: (product: Product) => void;
-  removeItem: (productId: string) => void;
+  // User-specific data stores
+  userCarts: Record<string, CartItem[]>;
+  userWishlists: Record<string, Product[]>;
+  currentUserId: string | null;
+  
+  // User management
+  setCurrentUser: (userId: string | null) => void;
+  migrateGuestToUser: (userId: string) => void;
+  
+  // Cart actions
+  addToCart: (product: Product) => void;
   deleteCartProduct: (productId: string) => void;
   resetCart: () => void;
-  getTotalPrice: () => number;
-  getSubTotalPrice: () => number;
+  getGroupedItems: () => { product: Product; quantity: number }[];
   getItemCount: (productId: string) => number;
-  getGroupedItems: () => CartItem[];
-  //   // favorite
-  favoriteProduct: Product[];
-  addToFavorite: (product: Product) => Promise<void>;
-  removeFromFavorite: (productId: string) => void;
-  resetFavorite: () => void;
+  getSubTotalPrice: () => number;
+  getTotalPrice: () => number;
+  
+  // Wishlist actions
+  addToWishlist: (product: Product) => void;
+  removeFromWishlist: (productId: string) => void;
+  resetWishlist: () => void;
 }
 
-const useStore = create<StoreState>()(
+export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      items: [],
-      favoriteProduct: [],
-      addItem: (product) =>
-        set((state) => {
-          const existingItem = state.items.find(
-            (item) => item.product._id === product._id
-          );
-          if (existingItem) {
-            return {
-              items: state.items.map((item) =>
-                item.product._id === product._id
-                  ? { ...item, quantity: item.quantity + 1 }
-                  : item
-              ),
-            };
-          } else {
-            return { items: [...state.items, { product, quantity: 1 }] };
-          }
-        }),
-      removeItem: (productId) =>
-        set((state) => ({
-          items: state.items.reduce((acc, item) => {
-            if (item.product._id === productId) {
-              if (item.quantity > 1) {
-                acc.push({ ...item, quantity: item.quantity - 1 });
-              }
-            } else {
-              acc.push(item);
+      userCarts: {},
+      userWishlists: {},
+      currentUserId: null,
+      
+      // User management
+      setCurrentUser: (userId) => set({ currentUserId: userId }),
+      
+      migrateGuestToUser: (userId) => {
+        const { currentUserId, userCarts, userWishlists } = get();
+        
+        if (currentUserId?.startsWith('guest-')) {
+          set({
+            currentUserId: userId,
+            userCarts: {
+              ...userCarts,
+              [userId]: userCarts[currentUserId] || []
+            },
+            userWishlists: {
+              ...userWishlists,
+              [userId]: userWishlists[currentUserId] || []
             }
-            return acc;
-          }, [] as CartItem[]),
-        })),
-      deleteCartProduct: (productId) =>
-        set((state) => ({
-          items: state.items.filter(
-            ({ product }) => product?._id !== productId
-          ),
-        })),
-      resetCart: () => set({ items: [] }),
-      getTotalPrice: () => {
-        return get().items.reduce((total, item) => {
-          const price = item.product.price ?? 0;
-          const discount = ((item.product.discount ?? 0) * price) / 100;
-          const discountedPrice = price - discount; // ✅ apply discount properly
-          return total + discountedPrice * item.quantity;
-        }, 0);
-      },
-
-      getSubTotalPrice: () => {
-        return get().items.reduce((total, item) => {
-          const price = item.product.price ?? 0;
-          return total + price * item.quantity; // Use original price only
-        }, 0);
-      },
-
-
-      getItemCount: (productId) => {
-        const item = get().items.find((item) => item.product._id === productId);
-        return item ? item.quantity : 0;
-      },
-      getGroupedItems: () => get().items,
-      addToFavorite: (product: Product) => {
-        return new Promise<void>((resolve) => {
-          set((state: StoreState) => {
-            const isFavorite = state.favoriteProduct.some(
-              (item) => item._id === product._id
-            );
-            return {
-              favoriteProduct: isFavorite
-                ? state.favoriteProduct.filter(
-                  (item) => item._id !== product._id
-                )
-                : [...state.favoriteProduct, { ...product }],
-            };
           });
-          resolve();
+        }
+      },
+      
+      // Cart actions
+      addToCart: (product) => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return;
+        
+        const currentCart = userCarts[currentUserId] || [];
+        const existingItem = currentCart.find(item => item.product._id === product._id);
+        
+        set({
+          userCarts: {
+            ...userCarts,
+            [currentUserId]: existingItem
+              ? currentCart.map(item =>
+                  item.product._id === product._id
+                    ? { ...item, quantity: item.quantity + 1 }
+                    : item
+                )
+              : [...currentCart, { product, quantity: 1 }]
+          }
         });
       },
-      removeFromFavorite: (productId: string) => {
-        set((state: StoreState) => ({
-          favoriteProduct: state.favoriteProduct.filter(
-            (item) => item?._id !== productId
-          ),
+      
+      deleteCartProduct: (productId) => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return;
+        
+        set({
+          userCarts: {
+            ...userCarts,
+            [currentUserId]: (userCarts[currentUserId] || []).filter(
+              item => item.product._id !== productId
+            )
+          }
+        });
+      },
+      
+      resetCart: () => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return;
+        
+        set({
+          userCarts: {
+            ...userCarts,
+            [currentUserId]: []
+          }
+        });
+      },
+      
+      getGroupedItems: () => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return [];
+        
+        return (userCarts[currentUserId] || []).map(item => ({
+          product: item.product,
+          quantity: item.quantity
         }));
       },
-      resetFavorite: () => {
-        set({ favoriteProduct: [] });
+      
+      getItemCount: (productId) => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return 0;
+        
+        const item = (userCarts[currentUserId] || []).find(
+          item => item.product._id === productId
+        );
+        return item ? item.quantity : 0;
       },
+      
+      getSubTotalPrice: () => {
+        const { currentUserId, userCarts } = get();
+        if (!currentUserId) return 0;
+        
+        return (userCarts[currentUserId] || []).reduce(
+          (total, item) => total + (item.product.price || 0) * item.quantity,
+          0
+        );
+      },
+      
+      getTotalPrice: () => {
+        // Add discount logic here if needed
+        return get().getSubTotalPrice();
+      },
+      
+      // Wishlist actions
+      addToWishlist: (product) => {
+        const { currentUserId, userWishlists } = get();
+        if (!currentUserId) return;
+        
+        const currentWishlist = userWishlists[currentUserId] || [];
+        
+        set({
+          userWishlists: {
+            ...userWishlists,
+            [currentUserId]: currentWishlist.some(p => p._id === product._id)
+              ? currentWishlist
+              : [...currentWishlist, product]
+          }
+        });
+      },
+      
+      removeFromWishlist: (productId) => {
+        const { currentUserId, userWishlists } = get();
+        if (!currentUserId) return;
+        
+        set({
+          userWishlists: {
+            ...userWishlists,
+            [currentUserId]: (userWishlists[currentUserId] || []).filter(
+              product => product._id !== productId
+            )
+          }
+        });
+      },
+      
+      resetWishlist: () => {
+        const { currentUserId, userWishlists } = get();
+        if (!currentUserId) return;
+        
+        set({
+          userWishlists: {
+            ...userWishlists,
+            [currentUserId]: []
+          }
+        });
+      }
     }),
     {
-      name: "cart-store",
+      name: 'cart-storage',
+      partialize: (state) => ({
+        userCarts: state.userCarts,
+        userWishlists: state.userWishlists,
+        currentUserId: state.currentUserId
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Handle rehydration logic if needed
+        if (state && !state.currentUserId) {
+          state.setCurrentUser(`guest-${Math.random().toString(36).substring(2, 15)}`);
+        }
+      }
     }
   )
 );

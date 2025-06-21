@@ -25,7 +25,7 @@ import {
 import { Address } from "@/sanity.types";
 import { client } from "@/sanity/lib/client";
 import { urlFor } from "@/sanity/lib/image";
-import useStore from "@/store";
+import { useStore } from "@/store";
 import { useAuth, useUser } from "@clerk/nextjs";
 import { ShoppingBag, Trash } from "lucide-react";
 import Image from "next/image";
@@ -43,13 +43,25 @@ import AddAddressForm from "@/components/AddAddressForm";
 import { Trash2 } from "lucide-react";
 
 const CartPage = () => {
+  const { user } = useUser();
+  const { isSignedIn } = useAuth();
   const {
     deleteCartProduct,
     getTotalPrice,
     getItemCount,
     getSubTotalPrice,
     resetCart,
+    setCurrentUser,
+    getGroupedItems,
   } = useStore();
+
+  // Sync user ID with store
+  useEffect(() => {
+    setCurrentUser(user?.id || null);
+  }, [user?.id, setCurrentUser]);
+
+  // Get current user's cart items
+  const groupedItems = getGroupedItems();
 
   // Compute pricing values
   const originalPrice = getSubTotalPrice(); // price before discount
@@ -57,15 +69,10 @@ const CartPage = () => {
   const discountAmount = originalPrice - totalPrice;
 
   const [loading, setLoading] = useState(false);
-  const groupedItems = useStore((state) => state.getGroupedItems());
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
-
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  // Replace the current fetchAddresses declaration with this:
   const fetchAddresses = useCallback(async () => {
     if (!user?.id) {
       console.log("No user ID available");
@@ -76,16 +83,16 @@ const CartPage = () => {
       console.log("Fetching addresses for user:", user.id);
 
       const addressQuery = `*[_type == "address" && user._ref == $userRef]{
-      _id,
-      name,
-      address,
-      barangay,
-      city,
-      province,
-      zip,
-      isDefault,
-      "userId": user._ref
-    }`;
+        _id,
+        name,
+        address,
+        barangay,
+        city,
+        province,
+        zip,
+        isDefault,
+        "userId": user._ref
+      }`;
 
       const addressData = await client.fetch(addressQuery, {
         userRef: `user.${user.id}`,
@@ -97,9 +104,8 @@ const CartPage = () => {
       console.error("Addresses fetching error:", error);
       toast.error("Failed to load addresses");
     }
-  }, [user?.id]); // Add user.id as dependency
+  }, [user?.id]);
 
-  // Then update your useEffect to include fetchAddresses in dependencies
   useEffect(() => {
     if (isSignedIn && user?.id) {
       fetchAddresses();
@@ -125,7 +131,7 @@ const CartPage = () => {
         }
       }
 
-      // Fallback to default or first address if no saved address
+      // Fallback to default or first address
       const defaultAddress = addresses.find((addr) => addr.isDefault);
       setSelectedAddress(defaultAddress || addresses[0]);
     }
@@ -155,8 +161,8 @@ const CartPage = () => {
         customerEmail: user?.emailAddresses[0]?.emailAddress ?? "Unknown",
         clerkUserId: user?.id ?? "",
         address: selectedAddress,
-        totalAmount: getTotalPrice(), // Add this
-        subtotalAmount: getSubTotalPrice(), // Add this
+        totalAmount: getTotalPrice(),
+        subtotalAmount: getSubTotalPrice(),
       };
       const checkoutUrl = await createCheckoutSession(groupedItems, metadata);
       if (checkoutUrl) {
@@ -170,7 +176,6 @@ const CartPage = () => {
     }
   };
 
-  // Handle address addition
   const handleAddressAdded = (newAddress: Address) => {
     setAddresses((prev) => [newAddress, ...prev]);
     setSelectedAddress(newAddress);
@@ -178,7 +183,6 @@ const CartPage = () => {
     toast.success("Address added successfully!");
   };
 
-  // Handle address deletion
   const handleDeleteAddress = async (addressId: string) => {
     const confirmed = window.confirm(
       "Are you sure you want to delete this address?"
