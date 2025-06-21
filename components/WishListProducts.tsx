@@ -1,6 +1,6 @@
 "use client";
 
-import { useStore } from "@/store";
+import useStore from "@/store";
 import { useState } from "react";
 import Container from "./Container";
 import { Heart, X } from "lucide-react";
@@ -12,38 +12,27 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/lib/image";
 import PriceFormatter from "./PriceFormatter";
 import AddToCartButton from "./AddToCartButton";
-import { useUser } from "@clerk/nextjs";
 
 const WishListProducts = () => {
   const [visibleProducts, setVisibleProducts] = useState(7);
-  const { user } = useUser();
-  const {
-    userWishlists,
-    currentUserId,
-    removeFromWishlist,
-    resetWishlist,
-  } = useStore();
-
-  // Get current user's wishlist items
-  const wishlistItems = currentUserId ? userWishlists[currentUserId] || [] : [];
-
+  const { favoriteProduct, removeFromFavorite, resetFavorite } = useStore();
   const loadMore = () => {
-    setVisibleProducts((prev) => Math.min(prev + 5, wishlistItems.length));
+    setVisibleProducts((prev) => Math.min(prev + 5, favoriteProduct.length));
   };
 
   const handleResetWishlist = () => {
     const confirmReset = window.confirm(
       "Are you sure you want to reset your wishlist?"
     );
-    if (confirmReset && currentUserId) {
-      resetWishlist();
+    if (confirmReset) {
+      resetFavorite();
       toast.success("Wishlist reset successfully");
     }
   };
 
   return (
     <Container>
-      {wishlistItems?.length > 0 ? (
+      {favoriteProduct?.length > 0 ? (
         <>
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
@@ -60,17 +49,15 @@ const WishListProducts = () => {
                 </tr>
               </thead>
               <tbody>
-                {wishlistItems
+                {favoriteProduct
                   ?.slice(0, visibleProducts)
                   ?.map((product: Product) => (
                     <tr key={product?._id} className="border-b">
                       <td className="px-2 py-4 flex items-center gap-2">
                         <X
                           onClick={() => {
-                            if (product?._id) {
-                              removeFromWishlist(product._id);
-                              toast.success("Product removed from wishlist");
-                            }
+                            removeFromFavorite(product?._id);
+                            toast.success("Product removed from wishlist");
                           }}
                           size={18}
                           className="hover:text-red-600 hover:cursor-pointer hoverEffect"
@@ -124,7 +111,7 @@ const WishListProducts = () => {
             </table>
           </div>
           <div className="flex items-center gap-2">
-            {visibleProducts < wishlistItems?.length && (
+            {visibleProducts < favoriteProduct?.length && (
               <div className="my-5">
                 <Button variant="outline" onClick={loadMore}>
                   Load More
@@ -142,13 +129,12 @@ const WishListProducts = () => {
               </div>
             )}
           </div>
-          {wishlistItems?.length > 0 && (
+          {favoriteProduct?.length > 0 && (
             <Button
               onClick={handleResetWishlist}
               className="mb-5 font-semibold"
               variant="destructive"
               size="lg"
-              disabled={!user}
             >
               Reset Wishlist
             </Button>
@@ -165,16 +151,14 @@ const WishListProducts = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold tracking-tight">
-              {user ? "Your wishlist is empty" : "Please log in to view your wishlist"}
+              Your wishlist is empty
             </h2>
             <p className="text-sm text-muted-foreground">
-              {user ? "Items added to your wishlist will appear here" : "Log in to see your saved items"}
+              Items added to your wishlist will appear here
             </p>
           </div>
           <Button asChild>
-            <Link href={user ? "/shop" : "/sign-in"}>
-              {user ? "Continue Shopping" : "Log In"}
-            </Link>
+            <Link href="/shop">Continue Shopping</Link>
           </Button>
         </div>
       )}

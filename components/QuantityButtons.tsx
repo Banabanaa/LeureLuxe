@@ -1,8 +1,8 @@
-"use client";
 import { Product } from "@/sanity.types";
-import { useStore } from "@/store"; // Named import
-import { Minus, Plus } from "lucide-react";
+import useStore from "@/store";
+import React from "react";
 import { Button } from "./ui/button";
+import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -10,31 +10,26 @@ interface Props {
   product: Product;
   className?: string;
 }
-
 const QuantityButtons = ({ product, className }: Props) => {
-  // Use selector pattern for better performance
-  const addItem = useStore(state => state.addToCart);
-  const removeItem = useStore(state => state.deleteCartProduct);
-  const getItemCount = useStore(state => state.getItemCount);
-  
+  const { addItem, removeItem, getItemCount } = useStore();
   const itemCount = getItemCount(product?._id);
   const isOutOfStock = product?.stock === 0;
 
   const handleRemoveProduct = () => {
     removeItem(product?._id);
     if (itemCount > 1) {
-      toast.success("Quantity decreased successfully!");
+      toast.success("Quantity Decreased successfully!");
     } else {
-      toast.success(`${product?.name?.substring(0, 12)}... removed successfully!`);
+      toast.success(`${product?.name?.substring(0, 12)} removed successfully!`);
     }
   };
 
   const handleAddToCart = () => {
     if ((product?.stock as number) > itemCount) {
       addItem(product);
-      toast.success("Quantity increased successfully!");
+      toast.success("Quantity Increased successfully!");
     } else {
-      toast.error("Cannot add more than available stock");
+      toast.error("Can not add more than available stock");
     }
   };
 
