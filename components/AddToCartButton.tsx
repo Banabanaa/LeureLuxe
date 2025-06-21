@@ -3,7 +3,7 @@ import { Product } from "@/sanity.types";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { ShoppingBag } from "lucide-react";
-import useStore from "@/store";
+import { useStore } from "@/store"; // Named import
 import toast from "react-hot-toast";
 import PriceFormatter from "./PriceFormatter";
 import QuantityButtons from "./QuantityButtons";
@@ -14,20 +14,22 @@ interface Props {
 }
 
 const AddToCartButton = ({ product, className }: Props) => {
-  const { addItem, getItemCount } = useStore();
+  // Use destructuring to get specific methods
+  const addItem = useStore(state => state.addToCart);
+  const getItemCount = useStore(state => state.getItemCount);
+  
   const itemCount = getItemCount(product?._id);
   const isOutOfStock = product?.stock === 0;
 
   const handleAddToCart = () => {
     if ((product?.stock as number) > itemCount) {
-      addItem(product);
-      toast.success(
-        `${product?.name?.substring(0, 12)}... added successfully!`
-      );
+      addItem(product); 
+      toast.success(`${product?.name?.substring(0, 12)}... added successfully!`);
     } else {
-      toast.error("Can not add more than available stock");
+      toast.error("Cannot add more than available stock");
     }
   };
+
   return (
     <div className="w-full h-12 flex items-center">
       {itemCount ? (
