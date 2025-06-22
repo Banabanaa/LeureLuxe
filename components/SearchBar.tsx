@@ -23,7 +23,7 @@ const SearchBar = ({ onSearch }: Props) => {
     }, 300);
 
     return () => clearTimeout(delayDebounce);
-  }, [value, onSearch]); // ✅ Include onSearch to satisfy exhaustive-deps
+  }, [value, onSearch]); 
 
   return (
     <div className="relative flex items-center space-x-2">

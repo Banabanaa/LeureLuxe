@@ -15,11 +15,16 @@ const CategoryList = ({
   selectedCategory,
   setSelectedCategory,
 }: Props) => {
+  // Sort categories alphabetically by title
+  const sortedCategories = [...categories].sort((a, b) =>
+    (a.title || "").localeCompare(b.title || "")
+  );
+
   return (
     <div className="w-full bg-white p-5">
       <Title className="text-base font-black">Product Categories</Title>
       <RadioGroup value={selectedCategory || ""} className="mt-2 space-y-1">
-        {categories?.map((category) => (
+        {sortedCategories?.map((category) => (
           <div
             onClick={() => {
               setSelectedCategory(category?.slug?.current as string);

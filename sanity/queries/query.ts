@@ -17,6 +17,12 @@ const DEAL_PRODUCTS = defineQuery(
   }`
 );
 
+const NEW_PRODUCTS = defineQuery(
+  `*[_type == 'product' && status == 'new'] | order(name asc){
+    ...,"categories": categories[]->title
+  }`
+);
+
 const PRODUCT_BY_SLUG_QUERY = defineQuery(
   `*[_type == "product" && slug.current == $slug] | order(name asc) [0]`
 );
@@ -85,6 +91,7 @@ export {
   BRANDS_QUERY,
   LATEST_BLOG_QUERY,
   DEAL_PRODUCTS,
+  NEW_PRODUCTS,
   PRODUCT_BY_SLUG_QUERY,
   BRAND_QUERY,
   MY_ORDERS_QUERY,

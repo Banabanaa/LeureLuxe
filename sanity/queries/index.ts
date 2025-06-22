@@ -7,6 +7,7 @@ import {
   GET_ALL_BLOG,
   LATEST_BLOG_QUERY,
   MY_ORDERS_QUERY,
+  NEW_PRODUCTS,
   OTHERS_BLOG_QUERY,
   PRODUCT_BY_SLUG_QUERY,
   SINGLE_BLOG_QUERY,
@@ -58,7 +59,16 @@ const getDealProducts = async () => {
     const { data } = await sanityFetch({ query: DEAL_PRODUCTS });
     return data ?? [];
   } catch (error) {
-    console.log("Error fetching deal Products:", error);
+    console.log("Error fetching Deal Products:", error);
+    return [];
+  }
+};
+const getNewProducts = async () => {
+  try {
+    const { data } = await sanityFetch({ query: NEW_PRODUCTS });
+    return data ?? [];
+  } catch (error) {
+    console.log("Error fetching New Products:", error);
     return [];
   }
 };
@@ -155,6 +165,7 @@ export {
   getCategories,
   getAllBrands,
   getLatestBlogs,
+  getNewProducts,
   getDealProducts,
   getProductBySlug,
   getBrand,

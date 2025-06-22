@@ -111,7 +111,7 @@ const ShopContent = ({ categories, brands }: Props) => {
                 }}
                 className="text-shop_dark_green underline text-sm mt-2 font-medium hover:text-darkRed hoverEffect"
               >
-                Reset Filters
+                RESET FILTERS
               </button>
             )}
 

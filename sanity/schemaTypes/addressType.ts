@@ -1,3 +1,4 @@
+// schemas/schemaTypes/addressType.ts
 import { defineField, defineType } from "sanity";
 
 export const addressType = defineType({
@@ -6,40 +7,40 @@ export const addressType = defineType({
   type: "document",
   fields: [
     defineField({
-      name: "user",
-      title: "User",
-      type: "reference",
-      to: [{ type: "user" }],
-      weak: true, // Breaks circular reference
-      validation: (Rule) => Rule.required()
+      name: "name",
+      title: "Address Name",
+      type: "string",
+      validation: Rule => Rule.required().max(50)
     }),
     defineField({
-      name: "street",
+      name: "address",
       title: "Street Address",
       type: "string",
-      validation: (Rule) => Rule.required()
+      validation: Rule => Rule.required()
+    }),
+    defineField({
+      name: "barangay",
+      title: "Barangay",
+      type: "string",
+      validation: Rule => Rule.required()
     }),
     defineField({
       name: "city",
-      title: "City",
+      title: "City/Municipality",
       type: "string",
-      validation: (Rule) => Rule.required()
+      validation: Rule => Rule.required()
     }),
     defineField({
-      name: "state",
-      title: "State/Province",
-      type: "string"
-    }),
-    defineField({
-      name: "postalCode",
-      title: "Postal Code",
-      type: "string"
-    }),
-    defineField({
-      name: "country",
-      title: "Country",
+      name: "province",
+      title: "Province",
       type: "string",
-      validation: (Rule) => Rule.required()
+      validation: Rule => Rule.required()
+    }),
+    defineField({
+      name: "zip",
+      title: "ZIP Code",
+      type: "string",
+      validation: Rule => Rule.required().regex(/^\d{4}$/, { name: "zipCode" })
     }),
     defineField({
       name: "isDefault",
@@ -47,18 +48,15 @@ export const addressType = defineType({
       type: "boolean",
       initialValue: false
     }),
-  ],
-  preview: {
-    select: {
-      title: 'street',
-      city: 'city',
-      user: 'user.fullName'
-    },
-    prepare({ title, city, user }) {
-      return {
-        title: `${user || 'No user'}: ${title}`,
-        subtitle: city
+    defineField({
+      name: "user",
+      title: "User",
+      type: "reference",
+      to: [{ type: "user" }],
+      validation: Rule => Rule.required(),
+       options: {
+        disableNew: true
       }
-    }
-  }
+    })
+  ]
 });
