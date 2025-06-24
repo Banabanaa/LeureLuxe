@@ -46,21 +46,15 @@ const ShopContent = ({ categories, brands }: Props) => {
         maxPrice = max;
       }
 
-      const query = `
+     const query = `
         *[_type == 'product' 
-          && (
-            // Either belongs to watches category
-            references(*[_type == "category" && slug.current == "watches"]._id)
-            // OR has variant set to watches
-            || variant == "watches"
-          )
+          && (!defined($selectedCategory) || references(*[_type == "category" && slug.current == $selectedCategory]._id))
           && (!defined($selectedBrand) || references(*[_type == "brand" && slug.current == $selectedBrand]._id))
           && price >= $minPrice && price <= $maxPrice
         ] 
         | order(name asc) {
           ...,
-          "categories": categories[]->{title, "slug": slug.current},
-          "variant": variant
+          "categories": categories[]->title
         }
       `;
 
@@ -171,11 +165,14 @@ const ShopContent = ({ categories, brands }: Props) => {
 
 const Shop = (props: Props) => {
   return (
-    <Suspense fallback={
-      <div className="flex justify-center items-center h-screen">
-        <Loader2 className="w-10 h-10 text-shop_dark_green animate-spin" />
-      </div>
-    }>
+    <Suspense 
+      fallback={
+        <div className="flex justify-center items-center h-screen">
+          <Loader2 className="w-10 h-10 text-shop_dark_green animate-spin" />
+          <span className="sr-only">Loading...</span>
+        </div>
+      }
+    >
       <ShopContent {...props} />
     </Suspense>
   );

@@ -17,12 +17,12 @@ const HomeCategories = ({ categories }: { categories: Category[] }) => {
           >
             {category?.image && (
               <div className="overflow-hidden border border-shop_orange/30 hover:border-shop_orange hoverEffect w-20 h-20 p-1">
-                <Link href={`/category/${category?.slug?.current}`}>
+                <Link href={`/category/${category?.slug?.current}`} passHref>
                   <Image
                     src={urlFor(category?.image).url()}
-                    alt="categoryImage"
-                    width={500}
-                    height={500}
+                    alt={category?.title || 'Category image'}
+                    width={80}
+                    height={80}
                     className="w-full h-full object-contain group-hover:scale-110 hoverEffect"
                   />
                 </Link>
