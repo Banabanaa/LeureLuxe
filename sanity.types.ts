@@ -280,7 +280,7 @@ export type Product = {
     [internalGroqTypeReferenceTo]?: "brand";
   };
   status?: "new" | "hot" | "sale";
-  variant?: "handbags" | "jewelry" | "watches" | "sunglasses" | "wallets" | "scarves" | "belts";
+  variant?: "belts" | "handbags" | "jewelry" | "scarves" | "sunglasses" | "wallets" | "watches";
   isFeatured?: boolean;
 };
 
