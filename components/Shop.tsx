@@ -39,7 +39,7 @@ const ShopContent = ({ categories, brands }: Props) => {
     setLoading(true);
     try {
       let minPrice = 0;
-      let maxPrice = 10000;
+      let maxPrice = 1000000;
       if (selectedPrice) {
         const [min, max] = selectedPrice.split("-").map(Number);
         minPrice = min;
