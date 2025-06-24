@@ -87,6 +87,8 @@ const OTHERS_BLOG_QUERY = defineQuery(`*[
     "slug": slug.current,
   }
 }`);
+
+
 export {
   BRANDS_QUERY,
   LATEST_BLOG_QUERY,

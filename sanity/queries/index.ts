@@ -12,6 +12,7 @@ import {
   PRODUCT_BY_SLUG_QUERY,
   SINGLE_BLOG_QUERY,
 } from "./query";
+import { client } from "@/sanity/lib/client";
 
 const getCategories = async (quantity?: number) => {
   try {
@@ -161,6 +162,24 @@ const getOthersBlog = async (slug: string, quantity: number) => {
     return [];
   }
 };
+
+const createRefundRequest = async (orderId, userId, reason = '') => {
+  return client.create({
+    _type: 'refundRequest',
+    order: {
+      _type: 'reference',
+      _ref: orderId
+    },
+    user: {
+      _type: 'reference',
+      _ref: userId
+    },
+    status: 'pending',
+    requestedAt: new Date().toISOString(),
+    reason: reason
+  });
+};
+
 export {
   getCategories,
   getAllBrands,
@@ -174,4 +193,5 @@ export {
   getSingleBlog,
   getBlogCategories,
   getOthersBlog,
+  createRefundRequest,
 };
