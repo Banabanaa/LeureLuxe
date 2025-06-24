@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import {Card, Flex, Text, Stack, Grid, Spinner, Box, Heading} from '@sanity/ui'
-import {useClient} from 'sanity'
+import { Card, Flex, Text, Stack, Grid, Spinner, Box, Heading } from '@sanity/ui'
+import { useClient } from 'sanity'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,60 +12,36 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js'
-import {Bar} from 'react-chartjs-2'
+import { Bar } from 'react-chartjs-2'
+import Link from 'next/link'
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
-const ORDER_STATUSES = [
-  'cancelled',
-  'delivered',
-  'out_for_delivery',
-  'paid',
-  'pending',
-  'processing',
-  'shipped'
-]
+const ORDER_STATUSES = ['cancelled', 'delivered', 'out_for_delivery', 'paid', 'pending', 'processing', 'shipped']
 
-// Dark mode color palette
 const COLORS = {
-  primary: '#8B5CF6',  // Purple-400
-  secondary: '#10B981', // Emerald-500
-  accent: '#F59E0B',    // Amber-500
-  error: '#EF4444',     // Red-500
-  text: '#F3F4F6',      // Gray-100
-  muted: '#9CA3AF',     // Gray-400
-  background: '#111827', // Gray-900
-  cardBg: '#1F2937',    // Gray-800
-  border: '#374151',     // Gray-700
+  primary: '#8B5CF6',
+  secondary: '#10B981',
+  accent: '#F59E0B',
+  error: '#EF4444',
+  text: '#F3F4F6',
+  muted: '#9CA3AF',
+  background: '#111827',
+  cardBg: '#1F2937',
+  border: '#374151',
   chartPrimary: 'rgba(139, 92, 246, 0.7)',
   chartSecondary: 'rgba(16, 185, 129, 0.7)'
 }
 
 export default function Dashboard() {
-  const client = useClient({apiVersion: '2023-05-31'})
-  const [stats, setStats] = React.useState<{
-    loading: boolean
-    totalProducts: number
-    productsByCategory: Record<string, number>
-    totalOrders: number
-    ordersByStatus: Record<string, number>
-    recentOrders: any[]
-    categories: string[]
-  }>({
+  const client = useClient({ apiVersion: '2023-05-31' })
+  const [stats, setStats] = React.useState({
     loading: true,
     totalProducts: 0,
-    productsByCategory: {},
     totalOrders: 0,
-    ordersByStatus: {},
+    ordersByStatus: {} as Record<string, number>,
     recentOrders: [],
-    categories: []
+    productCategories: {} as Record<string, number>
   })
 
   React.useEffect(() => {
@@ -73,29 +49,14 @@ export default function Dashboard() {
       try {
         const [
           totalProducts,
-          productsByCategory,
           totalOrders,
           ordersByStatus,
           recentOrders,
-          categories
+          categoryCounts
         ] = await Promise.all([
           client.fetch(`count(*[_type == "product"])`),
-          client.fetch(`*[_type == "product"] {
-            "category": category->title
-          }`).then(res => {
-            const counts: Record<string, number> = {}
-            res.forEach((doc: any) => {
-              const cat = doc.category?.toLowerCase()
-              if (cat) {
-                counts[cat] = (counts[cat] || 0) + 1
-              }
-            })
-            return counts
-          }),
           client.fetch(`count(*[_type == "order"])`),
-          client.fetch(`*[_type == "order"] {
-            status
-          }`).then(res => {
+          client.fetch(`*[_type == "order"] { status }`).then(res => {
             const counts: Record<string, number> = {}
             ORDER_STATUSES.forEach(status => counts[status] = 0)
             res.forEach((doc: any) => {
@@ -113,38 +74,38 @@ export default function Dashboard() {
             "customer": customer->name,
             "items": count(items)
           }`),
-          client.fetch(`*[_type == "category"].title`)
+          client.fetch(`*[_type == "product" && defined(categories)] {
+            categories[]-> { title }
+          }`).then(res => {
+            const counts: Record<string, number> = {}
+            res.forEach((product: any) => {
+              product.categories?.forEach((cat: any) => {
+                const title = cat.title?.toLowerCase()
+                if (title) {
+                  counts[title] = (counts[title] || 0) + 1
+                }
+              })
+            })
+            return counts
+          })
         ])
 
         setStats({
           loading: false,
           totalProducts,
-          productsByCategory,
           totalOrders,
           ordersByStatus,
           recentOrders,
-          categories: categories.map((c: string) => c.toLowerCase())
+          productCategories: categoryCounts
         })
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error)
-        setStats(prev => ({...prev, loading: false}))
+        setStats(prev => ({ ...prev, loading: false }))
       }
     }
 
     fetchStats()
   }, [client])
-
-  const productsChartData = {
-    labels: stats.categories.map(formatCategory),
-    datasets: [{
-      label: 'Products by Category',
-      data: stats.categories.map(c => stats.productsByCategory[c.toLowerCase()] || 0),
-      backgroundColor: COLORS.chartPrimary,
-      borderColor: COLORS.primary,
-      borderWidth: 1,
-      borderRadius: 4
-    }]
-  }
 
   const ordersChartData = {
     labels: ORDER_STATUSES.map(formatStatus),
@@ -158,79 +119,57 @@ export default function Dashboard() {
     }]
   }
 
+  const sortedCategories = Object.keys(stats.productCategories).sort()
+
+  const productCategoryChartData = {
+    labels: sortedCategories.map(capitalize),
+    datasets: [{
+      label: 'Products by Category',
+      data: sortedCategories.map(cat => stats.productCategories[cat]),
+      backgroundColor: sortedCategories.map(getColorForCategory),
+      borderColor: sortedCategories.map(getColorForCategory),
+      borderWidth: 1,
+      borderRadius: 4
+    }]
+  }
+
   if (stats.loading) {
     return (
-      <Flex align="center" justify="center" padding={4} height="fill" style={{backgroundColor: COLORS.background}}>
+      <Flex align="center" justify="center" padding={4} height="fill" style={{ backgroundColor: COLORS.background }}>
         <Spinner muted />
-        <Box marginLeft={3}>
-          <Text style={{color: COLORS.text}}>Loading dashboard...</Text>
+        <Box style={{ marginLeft: 12 }}>
+          <Text style={{ color: COLORS.text }}>Loading dashboard...</Text>
         </Box>
       </Flex>
     )
   }
 
   return (
-    <Box padding={4} style={{maxWidth: '1400px', margin: '0 auto', backgroundColor: COLORS.background, minHeight: '100vh'}}>
-      {/* Header */}
-      <Flex align="center" justify="space-between" marginBottom={5}>
-        <Heading as="h1" size={4} style={{color: COLORS.text, fontWeight: 600}}>
-          E-commerce Dashboard
+    <Box padding={4} style={{ maxWidth: '1400px', margin: '0 auto', backgroundColor: COLORS.background, minHeight: '100vh' }}>
+      <Flex align="center" justify="space-between" style={{ marginBottom: 20 }}>
+        <Heading as="h1" size={5} style={{ color: COLORS.text, fontWeight: 700, textDecoration: 'underline' }}>
+          E-COMMERCE DASHBOARD
         </Heading>
-        <Text size={1} style={{color: COLORS.muted}}>
+        <Text size={1} style={{ color: COLORS.muted }}>
           Last updated: {new Date().toLocaleDateString()}
         </Text>
       </Flex>
 
-      {/* Summary Cards */}
-      <Section title="Summary" marginBottom={5}>
+      <Section title="Summary" style={{ marginBottom: 20 }}>
         <Grid columns={[1, 1, 2, 2]} gap={4}>
-          <StatCard 
-            title="Total Products" 
-            value={stats.totalProducts} 
-            description="All products in inventory"
-            icon="📦"
-            color={COLORS.primary}
-          />
-          <StatCard 
-            title="Total Orders" 
-            value={stats.totalOrders} 
-            description="All orders received"
-            icon="🛒"
-            color={COLORS.secondary}
-          />
+          <StatCard title="Total Products" value={stats.totalProducts} description="All products in inventory" icon="📦" color={COLORS.primary} />
+          <StatCard title="Total Orders" value={stats.totalOrders} description="All orders received" icon="🛒" color={COLORS.secondary} />
         </Grid>
       </Section>
 
-      {/* Products Section */}
-      <Section title="Product Analytics" marginBottom={5}>
-        {stats.categories.length > 0 ? (
-          <>
-            <Grid columns={[2, 3, 4, 7]} gap={3} marginBottom={4}>
-              {stats.categories.map(category => (
-                <StatCard
-                  key={category}
-                  title={formatCategory(category)}
-                  value={stats.productsByCategory[category.toLowerCase()] || 0}
-                  small
-                  icon="📊"
-                />
-              ))}
-            </Grid>
-            <ChartContainer>
-              <Bar 
-                data={productsChartData} 
-                options={getChartOptions('Products by Category')}
-              />
-            </ChartContainer>
-          </>
-        ) : (
-          <EmptyState message="No product categories found" />
-        )}
+      <Section title="Product Category Analytics" style={{ marginBottom: 20 }}>
+        <ChartContainer>
+          <Bar data={productCategoryChartData} options={getChartOptions('Products by Category')} />
+        </ChartContainer>
       </Section>
 
-      {/* Orders Section */}
-      <Section title="Order Analytics" marginBottom={5}>
-        <Grid columns={[2, 3, 4, 7]} gap={3} marginBottom={4}>
+      <Section title="Order Analytics" style={{ marginBottom: 20 }}>
+        <Grid columns={[2, 3, 4, 7]} gap={3} style={{ marginBottom: 16 }}>
           {ORDER_STATUSES.map(status => (
             <StatCard
               key={status}
@@ -243,22 +182,15 @@ export default function Dashboard() {
           ))}
         </Grid>
         <ChartContainer>
-          <Bar 
-            data={ordersChartData} 
-            options={getChartOptions('Orders by Status')}
-          />
+          <Bar data={ordersChartData} options={getChartOptions('Orders by Status')} />
         </ChartContainer>
       </Section>
 
-      {/* Recent Orders */}
       <Section title="Recent Orders">
         {stats.recentOrders.length > 0 ? (
           <Grid columns={[1, 2, 3]} gap={4}>
             {stats.recentOrders.map(order => (
-              <OrderCard 
-                key={order._id}
-                order={order}
-              />
+              <OrderCard key={order._id} order={order} />
             ))}
           </Grid>
         ) : (
@@ -269,14 +201,12 @@ export default function Dashboard() {
   )
 }
 
-function Section({title, children, marginBottom = 0}: {
-  title: string
-  children: React.ReactNode
-  marginBottom?: number
-}) {
+// --- UI Components ---
+
+function Section({ title, children, style }: { title: string, children: React.ReactNode, style?: React.CSSProperties }) {
   return (
-    <Box marginBottom={marginBottom}>
-      <Heading as="h2" size={3} marginBottom={4} style={{color: COLORS.text, fontWeight: 600}}>
+    <Box style={style}>
+      <Heading as="h2" size={3} style={{ color: COLORS.text, fontWeight: 600, marginBottom: 16 }}>
         {title}
       </Heading>
       {children}
@@ -284,7 +214,7 @@ function Section({title, children, marginBottom = 0}: {
   )
 }
 
-function StatCard({title, value, description, small = false, color, icon}: {
+function StatCard({ title, value, description, small = false, color, icon }: {
   title: string
   value: number
   description?: string
@@ -294,143 +224,108 @@ function StatCard({title, value, description, small = false, color, icon}: {
 }) {
   const cardColor = color || COLORS.primary
   return (
-    <Card 
-      padding={small ? 3 : 4} 
-      radius={2} 
-      shadow={1} 
-      style={{
-        borderLeft: `4px solid ${cardColor}`,
-        backgroundColor: COLORS.cardBg,
-        borderColor: COLORS.border
-      }}
-    >
+    <Card padding={small ? 3 : 4} radius={2} shadow={1} style={{ borderLeft: `4px solid ${cardColor}`, backgroundColor: COLORS.cardBg, borderColor: COLORS.border }}>
       <Stack space={small ? 2 : 3}>
         <Flex align="center" gap={2}>
-          {icon && <Text size={2} style={{color: cardColor}}>{icon}</Text>}
-          <Text 
-            size={small ? 1 : 2} 
-            weight="medium"
-            style={{color: COLORS.muted}}
-          >
-            {title}
-          </Text>
+          {icon && <Text size={2} style={{ color: cardColor }}>{icon}</Text>}
+          <Text size={small ? 1 : 2} weight="medium" style={{ color: COLORS.muted }}>{title}</Text>
         </Flex>
-        <Text 
-          size={small ? 3 : 5} 
-          weight="bold" 
-          style={{color: COLORS.text}}
-        >
-          {value.toLocaleString()}
-        </Text>
-        {description && (
-          <Text size={0} style={{color: COLORS.muted}}>
-            {description}
-          </Text>
-        )}
+        <Text size={small ? 3 : 5} weight="bold" style={{ color: COLORS.text }}>{value.toLocaleString()}</Text>
+        {description && <Text size={0} style={{ color: COLORS.muted }}>{description}</Text>}
       </Stack>
     </Card>
   )
 }
 
-function ChartContainer({children}: {children: React.ReactNode}) {
+function ChartContainer({ children }: { children: React.ReactNode }) {
   return (
-    <Card padding={3} radius={2} shadow={1} style={{backgroundColor: COLORS.cardBg, borderColor: COLORS.border}}>
-      <div style={{height: '350px'}}>
-        {children}
-      </div>
+    <Card padding={3} radius={2} shadow={1} style={{ backgroundColor: COLORS.cardBg, borderColor: COLORS.border }}>
+      <div style={{ height: '350px' }}>{children}</div>
     </Card>
   )
 }
 
-function OrderCard({order}: {order: any}) {
+function OrderCard({ order }: { order: any }) {
+  const orderLink = `/admin/structure/order;${order._id}`
   return (
-    <Card padding={3} radius={2} style={{backgroundColor: COLORS.cardBg, borderColor: COLORS.border}}>
-      <Stack space={3}>
-        <Flex justify="space-between" align="center">
-          <Text size={1} weight="medium" style={{color: COLORS.muted}}>
-            {new Date(order._createdAt).toLocaleDateString()}
-          </Text>
-          <Badge status={order.status} />
-        </Flex>
-        
-        <Text size={1} weight="medium" style={{color: COLORS.text}}>
-          {order.customer || 'Anonymous Customer'}
-        </Text>
-        
-        <Flex justify="space-between" align="center">
-          <Text size={1} style={{color: COLORS.muted}}>
-            {order.items} item{order.items !== 1 ? 's' : ''}
-          </Text>
-          <Text size={1} style={{color: COLORS.primary}}>
-            View Details
-          </Text>
-        </Flex>
-      </Stack>
-    </Card>
+    <Link href={orderLink} style={{ textDecoration: 'none' }}>
+      <Card padding={3} radius={2} shadow={1} style={{
+        backgroundColor: COLORS.cardBg,
+        borderColor: COLORS.border,
+        cursor: 'pointer',
+        transition: 'transform 0.2s',
+      }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.01)')}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+      >
+        <Stack space={3}>
+          <Flex justify="space-between" align="center">
+            <Text size={1} weight="medium" style={{ color: COLORS.muted }}>{new Date(order._createdAt).toLocaleDateString()}</Text>
+            <Badge status={order.status} />
+          </Flex>
+          <Text size={1} weight="medium" style={{ color: COLORS.text }}>{order.customer || 'Anonymous Customer'}</Text>
+          <Flex justify="space-between" align="center">
+            <Text size={1} style={{ color: COLORS.muted }}>{order.items} item{order.items !== 1 ? 's' : ''}</Text>
+            <Text size={1} style={{ color: COLORS.primary, fontWeight: 500 }}>View Details →</Text>
+          </Flex>
+        </Stack>
+      </Card>
+    </Link>
   )
 }
 
-function Badge({status}: {status: string}) {
+function Badge({ status }: { status: string }) {
   const color = getStatusColor(status)
   const bgColor = getStatusColor(status, true)
-  
   return (
-    <Box
-      padding={1}
-      paddingLeft={2}
-      paddingRight={2}
-      style={{
-        backgroundColor: bgColor,
-        color: color,
-        borderRadius: '12px',
-        fontSize: '0.75rem',
-        fontWeight: 600,
-        textTransform: 'capitalize'
-      }}
-    >
+    <Box padding={1} paddingLeft={2} paddingRight={2} style={{
+      backgroundColor: bgColor,
+      color: color,
+      borderRadius: '12px',
+      fontSize: '0.75rem',
+      fontWeight: 600,
+      textTransform: 'capitalize'
+    }}>
       {formatStatus(status)}
     </Box>
   )
 }
 
-function EmptyState({message}: {message: string}) {
+function EmptyState({ message }: { message: string }) {
   return (
-    <Card padding={4} radius={2} shadow={1} style={{backgroundColor: COLORS.cardBg, textAlign: 'center', borderColor: COLORS.border}}>
-      <Text size={2} style={{color: COLORS.muted}}>
-        {message}
-      </Text>
+    <Card padding={4} radius={2} shadow={1} style={{ backgroundColor: COLORS.cardBg, textAlign: 'center', borderColor: COLORS.border }}>
+      <Text size={2} style={{ color: COLORS.muted }}>{message}</Text>
     </Card>
   )
 }
 
-// Helper functions
+// --- Utility Functions ---
+
 function formatStatus(status: string): string {
   return status.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 }
 
-function formatCategory(category: string): string {
-  return category.charAt(0).toUpperCase() + category.slice(1)
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 function getStatusColor(status: string, background = false): string {
-  switch(status) {
-    case 'pending': 
-      return background ? 'rgba(245, 158, 11, 0.2)' : '#F59E0B' // Amber
-    case 'processing': 
-      return background ? 'rgba(59, 130, 246, 0.2)' : '#3B82F6' // Blue
-    case 'shipped': 
-      return background ? 'rgba(139, 92, 246, 0.2)' : '#8B5CF6' // Purple
-    case 'out_for_delivery': 
-      return background ? 'rgba(167, 139, 250, 0.2)' : '#A78BFA' // Violet
-    case 'delivered': 
-      return background ? 'rgba(16, 185, 129, 0.2)' : '#10B981' // Emerald
-    case 'paid': 
-      return background ? 'rgba(16, 185, 129, 0.2)' : '#10B981' // Emerald
-    case 'cancelled': 
-      return background ? 'rgba(239, 68, 68, 0.2)' : '#EF4444' // Red
-    default: 
-      return background ? 'rgba(156, 163, 175, 0.2)' : '#9CA3AF' // Gray
+  switch (status) {
+    case 'pending': return background ? 'rgba(245, 158, 11, 0.2)' : '#F59E0B'
+    case 'processing': return background ? 'rgba(59, 130, 246, 0.2)' : '#3B82F6'
+    case 'shipped': return background ? 'rgba(139, 92, 246, 0.2)' : '#8B5CF6'
+    case 'out_for_delivery': return background ? 'rgba(167, 139, 250, 0.2)' : '#A78BFA'
+    case 'delivered': return background ? 'rgba(16, 185, 129, 0.2)' : '#10B981'
+    case 'paid': return background ? 'rgba(16, 185, 129, 0.2)' : '#10B981'
+    case 'cancelled': return background ? 'rgba(239, 68, 68, 0.2)' : '#EF4444'
+    default: return background ? 'rgba(156, 163, 175, 0.2)' : '#9CA3AF'
   }
+}
+
+function getColorForCategory(category: string): string {
+  const hash = category.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const hue = hash % 360
+  return `hsl(${hue}, 70%, 60%)`
 }
 
 function getChartOptions(title: string) {
@@ -442,18 +337,14 @@ function getChartOptions(title: string) {
         position: 'top',
         labels: {
           color: COLORS.text,
-          font: {
-            family: 'Inter, sans-serif'
-          }
+          font: { family: 'Inter, sans-serif' }
         }
       },
       title: {
         display: true,
         text: title,
         color: COLORS.text,
-        font: {
-          size: 16
-        }
+        font: { size: 16 }
       },
       tooltip: {
         backgroundColor: COLORS.cardBg,
@@ -467,21 +358,12 @@ function getChartOptions(title: string) {
     },
     scales: {
       x: {
-        grid: {
-          display: false,
-          color: COLORS.border
-        },
-        ticks: {
-          color: COLORS.muted
-        }
+        grid: { display: false, color: COLORS.border },
+        ticks: { color: COLORS.muted }
       },
       y: {
-        grid: {
-          color: COLORS.border
-        },
-        ticks: {
-          color: COLORS.muted
-        }
+        grid: { color: COLORS.border },
+        ticks: { color: COLORS.muted }
       }
     }
   }
