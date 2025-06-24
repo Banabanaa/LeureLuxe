@@ -48,13 +48,19 @@ const ShopContent = ({ categories, brands }: Props) => {
 
       const query = `
         *[_type == 'product' 
-          && (!defined($selectedCategory) || references(*[_type == "category" && slug.current == $selectedCategory]._id))
+          && (
+            // Either belongs to watches category
+            references(*[_type == "category" && slug.current == "watches"]._id)
+            // OR has variant set to watches
+            || variant == "watches"
+          )
           && (!defined($selectedBrand) || references(*[_type == "brand" && slug.current == $selectedBrand]._id))
           && price >= $minPrice && price <= $maxPrice
         ] 
         | order(name asc) {
           ...,
-          "categories": categories[]->title
+          "categories": categories[]->{title, "slug": slug.current},
+          "variant": variant
         }
       `;
 

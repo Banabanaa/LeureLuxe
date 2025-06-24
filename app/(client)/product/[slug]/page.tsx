@@ -34,17 +34,6 @@ const SingleProductPage = async ({
           <p className="text-sm text-gray-600 tracking-wide">
             {product?.description}
           </p>
-          <div className="flex items-center gap-0.5 text-xs">
-            {[...Array(5)].map((_, index) => (
-              <StarIcon
-                key={index}
-                size={12}
-                className="text-shop_light_green"
-                fill={"#3b9c3c"}
-              />
-            ))}
-            <p className="font-semibold">{`(120)`}</p>
-          </div>
         </div>
         <div className="space-y-2 border-t border-b border-gray-200 py-5">
           <PriceView

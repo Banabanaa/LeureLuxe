@@ -67,22 +67,6 @@ const ProductCard = ({ product }: { product: Product }) => {
           </p>
         )}
         <Title className="text-sm line-clamp-1">{product?.name}</Title>
-
-        {/* <div className="flex items-center gap-2">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, index) => (
-              <StarIcon
-                key={index}
-                className={
-                  index < 4 ? "text-shop_light_green" : " text-lightText"
-                }
-                fill={index < 4 ? "#93D991" : "#ababab"}
-              />
-            ))}
-          </div>
-          <p className="text-lightText text-xs tracking-wide">5 Reviews</p>
-        </div> */}
-
         <div className="flex items-center gap-2.5">
           <p className="font-medium">In Stock</p>
           <p

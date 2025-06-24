@@ -163,23 +163,6 @@ const getOthersBlog = async (slug: string, quantity: number) => {
   }
 };
 
-const createRefundRequest = async (orderId, userId, reason = '') => {
-  return client.create({
-    _type: 'refundRequest',
-    order: {
-      _type: 'reference',
-      _ref: orderId
-    },
-    user: {
-      _type: 'reference',
-      _ref: userId
-    },
-    status: 'pending',
-    requestedAt: new Date().toISOString(),
-    reason: reason
-  });
-};
-
 export {
   getCategories,
   getAllBrands,
@@ -193,5 +176,4 @@ export {
   getSingleBlog,
   getBlogCategories,
   getOthersBlog,
-  createRefundRequest,
 };
