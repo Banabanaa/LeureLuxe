@@ -56,17 +56,6 @@ const Footer = () => {
               ))}
             </ul>
           </div>
-          <div className="space-y-4">
-            <SubTitle>Newsletter</SubTitle>
-            <SubText>
-              Subscribe to our newsletter to receive updates and exclusive
-              offers
-            </SubText>
-            <form className="space-y-3">
-              <Input placeholder="Enter your email" type="email" required />
-              <Button className="w-full">Subscribe</Button>
-            </form>
-          </div>
         </div>
         <div className="py-6 border-t text-center text-sm text-gray-600">
           <div>
